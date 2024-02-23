@@ -1,0 +1,68 @@
+﻿@page "/flightlist"
+@using System.Diagnostics
+@inject IFlightService FlightService
+@rendermode InteractiveServer
+@attribute [StreamRendering(true)]
+
+<PageTitle>Flights</PageTitle>
+
+<h1>Flights</h1>
+
+<p>
+    Search by airport <input name="search" type="search" @bind="searchTerm" />
+</p>
+
+<p>
+    Search by date from <input name="dateFrom" type="datetime" @bind="searchDateFrom" /> to <input name="dateTo" type="datetime" @bind="searchDateTo" />
+</p>
+
+@if (flights == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (flights.Count == 0) {
+    <p><em>
+        No flights found.
+    </em></p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Airport</th>
+                <th>City</th>
+                <th>Flightnumber</th>
+                <th>Departure</th>
+                <th>Arrival</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var flight in flights.Where(f => f.Airport.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) && f.Departure.CompareTo(searchDateFrom) > 0 && f.Arrival.CompareTo(searchDateTo) < 0))
+            {
+                <tr>
+                    <td>@flight.Id</td>
+                    <td>@flight.Airport</td>
+                    <td>@flight.City</td>
+                    <td>@flight.Flightnumber</td>
+                    <td>@flight.Departure.ToString("dd-MM-yyyy HH:mm")</td>
+                    <td>@flight.Arrival.ToString("dd-MM-yyyy HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<Flight> flights = new List<Flight>();
+    private string searchTerm = "";
+    private DateTime searchDateFrom = new DateTime(2024, 02, 24, 07, 00, 00);
+    private DateTime searchDateTo = new DateTime(2024, 02, 29, 23, 00, 00);
+
+    protected override async Task OnInitializedAsync()
+    {
+        flights = await FlightService.GetAllFlights();
+    }
+
+}
